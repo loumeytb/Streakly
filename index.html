@@ -12,6 +12,9 @@
             --text-color: #eeeeee;
             --text-dim: #999999;
             --danger: #ff2e63;
+            --gray-day: #333333;
+            --orange-day: #ff9f43;
+            --green-day: #10ac84;
         }
 
         body {
@@ -23,6 +26,7 @@
             padding-top: 70px;
         }
 
+        /* Onglets */
         .tabs-header {
             position: fixed;
             top: 0;
@@ -60,9 +64,10 @@
             border-radius: 2px 2px 0 0;
         }
 
-        .tab-content { display: none; padding: 20px; box-sizing: border-box; }
+        .tab-content { display: none; padding: 20px; box-sizing: border-box; padding-bottom: 80px; }
         .tab-content.active { display: block; }
 
+        /* Éléments des listes */
         .item {
             display: flex;
             align-items: center;
@@ -76,26 +81,14 @@
         
         .checkbox-container {
             display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            width: 70%;
-        }
-
-        .checkbox-main {
-            display: flex;
             align-items: center;
-            font-size: 16px;
+            cursor: pointer;
+            width: 80%;
         }
         
+        .checkbox-main { display: flex; align-items: center; font-size: 16px; }
         .checkbox-main input { margin-right: 12px; transform: scale(1.3); }
         .checked { text-decoration: line-through; color: var(--text-dim); }
-
-        .task-time {
-            font-size: 12px;
-            color: var(--accent-color);
-            margin-left: 31px;
-            margin-top: 2px;
-        }
 
         .delete-btn {
             background: var(--danger);
@@ -115,7 +108,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
-        .input-group { display: flex; margin-bottom: 10px; }
+        .input-group { display: flex; }
         .input-group input[type="text"] {
             flex: 1;
             padding: 12px;
@@ -134,22 +127,6 @@
             border-radius: 0 8px 8px 0;
             cursor: pointer;
             font-size: 18px;
-        }
-
-        .time-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: var(--text-dim);
-            font-size: 14px;
-        }
-
-        .time-group input[type="time"] {
-            padding: 8px;
-            background: #2d2d2d;
-            border: none;
-            color: white;
-            border-radius: 6px;
         }
 
         textarea {
@@ -178,6 +155,94 @@
             margin-top: 15px;
             font-size: 15px;
         }
+
+        /* --- STYLES MODAL / POPUP CALENDRIER --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 90%;
+            height: 85%;
+            border-radius: 12px;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 { margin: 0; color: var(--accent-color); font-size: 18px; }
+        .close-modal {
+            background: var(--danger);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .calendar-nav button {
+            background: #2d2d2d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+            padding-bottom: 10px;
+        }
+
+        .day-box {
+            border-radius: 6px;
+            padding: 8px 4px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            min-height: 55px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .day-box .day-date { font-size: 10px; opacity: 0.8; margin-bottom: 3px; }
+
+        /* Couleurs du calendrier */
+        .day-gray { background-color: var(--gray-day); border: 1px solid #444; }
+        .day-orange { background-color: var(--orange-day); color: #121212; }
+        .day-green { background-color: var(--green-day); }
     </style>
 </head>
 <body>
@@ -190,26 +255,29 @@
 
     <!-- CONTENU : TO-DO -->
     <div id="todo" class="tab-content active">
-        <button class="btn-action" style="margin-bottom: 15px; background: #222;" onclick="requestNotifPermission()">🔔 Autoriser les Notifications</button>
         <div id="todo-list"></div>
-        
         <div class="input-block">
             <div class="input-group">
-                <input type="text" id="todo-input" placeholder="Ajouter une tâche...">
+                <input type="text" id="todo-input" placeholder="Ajouter une tâche unique...">
                 <button onclick="addTodo()">+</button>
             </div>
-            <div class="time-group">
-                <span>Rappel (Optionnel) :</span>
-                <input type="time" id="todo-time">
-            </div>
         </div>
-        <button class="btn-action" style="background: #2d2d2d; margin-top: 20px;" onclick="manualReset()">🔄 Nettoyer les tâches cochéex</button>
+        <button class="btn-action" style="background: #2d2d2d; margin-top: 20px;" onclick="manualResetTodo()">🔄 Nettoyer les tâches cochées</button>
     </div>
 
     <!-- CONTENU : DAILY -->
     <div id="daily" class="tab-content">
         <div id="habits-list"></div>
-        <button class="btn-action" onclick="resetHabits()">🔄 Reset Dailies</button>
+        
+        <div class="input-block">
+            <div class="input-group">
+                <input type="text" id="daily-input" placeholder="Ajouter un objectif quotidien...">
+                <button onclick="addDaily()">+</button>
+            </div>
+        </div>
+        
+        <button class="btn-action" style="background: #222; border: 1px solid #444;" onclick="resetHabits()">🔄 Reset Dailies manuel</button>
+        <button class="btn-action" style="background: var(--accent-color); color: #121212; font-size: 16px; margin-top: 20px;" onclick="openCalendar()">📊 Voir la progression</button>
     </div>
 
     <!-- CONTENU : NOTES -->
@@ -217,7 +285,23 @@
         <textarea id="notes-input" placeholder="Notes d'entraînement..." oninput="saveNotes()"></textarea>
     </div>
 
+    <!-- FENÊTRE POP-UP (MODAL) : CALENDRIER -->
+    <div id="calendar-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="calendar-month-title">Mois</h3>
+                <button class="close-modal" onclick="closeCalendar()">Fermer</button>
+            </div>
+            <div class="calendar-nav">
+                <button onclick="changeMonth(-1)">◀ Précédent</button>
+                <button onclick="changeMonth(1)">Suivant ▶</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid-container"></div>
+        </div>
+    </div>
+
     <script>
+        // --- CONTEXTE ET NAVIGATION ---
         function switchTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -225,18 +309,37 @@
             button.classList.add('active');
         }
 
-        let defaultHabits = [
-            { text: "Séance de sport (Calisthénie)", done: false },
-            { text: "Prendre la créatine (5g)", done: false },
-            { text: "Zéro sucre industriel", done: false },
-            { text: "Mettre les accessoires (Montre/Collier)", done: false }
-        ];
-
-        let habits = JSON.parse(localStorage.getItem('habits')) || defaultHabits;
+        // --- ENREGISTREMENT ET ÉVOLUTION ---
+        let habits = JSON.parse(localStorage.getItem('habits')) || [];
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; // Structure: {"YYYY-MM-DD": {checked: 2, total: 5}}
         
         document.getElementById('notes-input').value = localStorage.getItem('notes') || "";
 
+        let currentCalendarDate = new Date(); // Date de visionnage du calendrier
+
+        // Format utile pour les clés d'historique (ex: 2026-06-01)
+        function getTodayKey(date = new Date()) {
+            const offset = date.getTimezoneOffset();
+            let d = new Date(date.getTime() - (offset*60*1000));
+            return d.toISOString().split('T')[0];
+        }
+
+        // Synchronise le score du jour actuel dans l'historique global
+        function syncTodayHistory() {
+            const todayKey = getTodayKey();
+            const total = habits.length;
+            const checked = habits.filter(h => h.done).length;
+            
+            if (total > 0) {
+                history[todayKey] = { checked: checked, total: total };
+            } else {
+                delete history[todayKey];
+            }
+            localStorage.setItem('habitHistory', JSON.stringify(history));
+        }
+
+        // --- GESTION DE L'ONGLET DAILY ---
         function renderHabits() {
             const list = document.getElementById('habits-list');
             list.innerHTML = '';
@@ -249,13 +352,29 @@
                                 ${habit.text}
                             </span>
                         </label>
+                        <button class="delete-btn" style="padding: 3px 8px; font-size: 12px;" onclick="deleteDaily(${index})">X</button>
                     </div>`;
             });
             localStorage.setItem('habits', JSON.stringify(habits));
+            syncTodayHistory();
+        }
+
+        function addDaily() {
+            const input = document.getElementById('daily-input');
+            if (input.value.trim() !== "") {
+                habits.push({ text: input.value.trim(), done: false });
+                input.value = "";
+                renderHabits();
+            }
         }
 
         function toggleHabit(index) {
             habits[index].done = !habits[index].done;
+            renderHabits();
+        }
+
+        function deleteDaily(index) {
+            habits.splice(index, 1);
             renderHabits();
         }
 
@@ -264,21 +383,17 @@
             renderHabits();
         }
 
-        // --- SECTION TO-DO ---
+        // --- GESTION DE L'ONGLET TO-DO ---
         function renderTodos() {
             const list = document.getElementById('todo-list');
             list.innerHTML = '';
             todos.forEach((todo, index) => {
-                let timeDisplay = todo.time ? `🔔 Rémind à ${todo.time}` : '';
                 list.innerHTML += `
                     <div class="item">
-                        <div class="checkbox-container">
-                            <label class="checkbox-main ${todo.done ? 'checked' : ''}">
-                                <input type="checkbox" ${todo.done ? 'checked' : ''} onclick="toggleTodo(${index})">
-                                ${todo.text}
-                            </label>
-                            ${todo.time ? `<span class="task-time">${timeDisplay}</span>` : ''}
-                        </div>
+                        <label class="checkbox-container ${todo.done ? 'checked' : ''}">
+                            <input type="checkbox" ${todo.done ? 'checked' : ''} onclick="toggleTodo(${index})">
+                            ${todo.text}
+                        </label>
                         <button class="delete-btn" onclick="deleteTodo(${index})">X</button>
                     </div>`;
             });
@@ -287,17 +402,9 @@
 
         function addTodo() {
             const input = document.getElementById('todo-input');
-            const timeInput = document.getElementById('todo-time');
-            
             if(input.value.trim() !== "") {
-                todos.push({ 
-                    text: input.value.trim(), 
-                    done: false,
-                    time: timeInput.value || null,
-                    notified: false
-                });
+                todos.push({ text: input.value.trim(), done: false });
                 input.value = "";
-                timeInput.value = "";
                 renderTodos();
             }
         }
@@ -312,8 +419,7 @@
             renderTodos();
         }
 
-        // Supprime uniquement ce qui est coché
-        function manualReset() {
+        function manualResetTodo() {
             todos = todos.filter(todo => !todo.done);
             renderTodos();
         }
@@ -322,52 +428,113 @@
             localStorage.setItem('notes', document.getElementById('notes-input').value);
         }
 
-        // --- NOTIFICATIONS & CRON MINUIT ---
-        function requestNotifPermission() {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") alert("Notifications prêtes !");
-            });
+        // --- LOGIQUE DU CALENDRIER DE PROGRESSION ---
+        function openCalendar() {
+            currentCalendarDate = new Date(); // Reset sur le mois actuel à l'ouverture
+            buildCalendar();
+            document.getElementById('calendar-modal').style.display = 'flex';
         }
 
-        function checkTimeAndNotif() {
-            setInterval(() => {
-                const now = new Date();
-                const currentHour = String(now.getHours()).padStart(2, '0');
-                const currentMinute = String(now.getMinutes()).padStart(2, '0');
-                const currentTime = `${currentHour}:${currentMinute}`;
-                const currentSeconds = now.getSeconds();
+        function closeCalendar() {
+            document.getElementById('calendar-modal').style.display = 'none';
+        }
 
-                // 1. Reset Automatique à Minuit (00:00:00)
-                if (currentTime === "00:00" && currentSeconds === 0) {
-                    todos = todos.filter(todo => !todo.done); // On vire les cochées
-                    todos.forEach(todo => todo.notified = false); // Reset statut notif pour les restantes
-                    renderTodos();
+        function changeMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            buildCalendar();
+        }
+
+        function buildCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            // Titre du mois
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            document.getElementById('calendar-month-title').innerText = `${monthNames[month]} ${year}`;
+            
+            const grid = document.getElementById('calendar-grid-container');
+            grid.innerHTML = '';
+            
+            // Nombre de jours dans le mois sélectionné
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = getTodayKey(new Date());
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                // Créer l'objet Date pour la case courante
+                const thisDate = new Date(year, month, day);
+                const dateKey = getTodayKey(thisDate);
+                
+                // Formater la date en jj/mm
+                const dayDisplay = String(day).padStart(2, '0');
+                const monthDisplay = String(month + 1).padStart(2, '0');
+                const formattedDate = `${dayDisplay}/${monthDisplay}`;
+
+                // Récupérer les stats (si existantes)
+                let checkedCount = 0;
+                let totalCount = habits.length; // Valeur par défaut synchronisée avec la liste actuelle
+
+                if (history[dateKey]) {
+                    checkedCount = history[dateKey].checked;
+                    totalCount = history[dateKey].total;
+                } else if (dateKey === todayStr) {
+                    checkedCount = habits.filter(h => h.done).length;
+                    totalCount = habits.length;
                 }
 
-                // 2. Vérification des alertes pour les To-Do
-                todos.forEach(todo => {
-                    if (todo.time && currentTime === todo.time && currentSeconds === 0 && !todo.notified && !todo.done) {
-                        if (Notification.permission === "granted") {
-                            let notif = new Notification(todo.text, {
-                                body: "C'est l'heure de faire cette tâche !",
-                            });
-                            notif.onclick = function() {
-                                window.focus();
-                                this.close();
-                            };
-                            todo.notified = true; // Évite les doubles triggers pendant la même minute
-                            localStorage.setItem('todos', JSON.stringify(todos));
+                // Déterminer le statut de couleur
+                let colorClass = "day-gray"; // Futur ou aucun daily configuré
+                
+                if (thisDate <= new Date()) {
+                    // C'est aujourd'hui ou un jour passé
+                    if (totalCount > 0) {
+                        if (checkedCount === totalCount) {
+                            colorClass = "day-green"; // Tout validé
+                        } else if (checkedCount > 0) {
+                            colorClass = "day-orange"; // Partiellement validé
+                        } else {
+                            colorClass = "day-gray"; // Rien fait du tout
                         }
                     }
-                });
+                }
 
+                // Ajustement si le jour est strictement dans le futur (toujours gris, 0 / total)
+                const clearToday = new Date();
+                clearToday.setHours(0,0,0,0);
+                const clearThisDate = new Date(year, month, day, 0,0,0,0);
+                if (clearThisDate > clearToday) {
+                    colorClass = "day-gray";
+                    checkedCount = 0;
+                    totalCount = habits.length; 
+                }
+
+                grid.innerHTML += `
+                    <div class="day-box ${colorClass}">
+                        <span class="day-date">${formattedDate}</span>
+                        <span>${checkedCount}/${totalCount}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // --- COMPTEUR MINUIT POUR RESET DAILIES & TO-DO ---
+        function checkMidnight() {
+            setInterval(() => {
+                const now = new Date();
+                if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+                    // 1. Reset Automatique du Daily
+                    resetHabits();
+                    
+                    // 2. Nettoyage de la To-Do (uniquement les cochées virent)
+                    todos = todos.filter(todo => !todo.done);
+                    renderTodos();
+                }
             }, 1000);
         }
 
-        // Initialisation
+        // Lancement initial
         renderHabits();
         renderTodos();
-        checkTimeAndNotif();
+        checkMidnight();
     </script>
 </body>
 </html>
