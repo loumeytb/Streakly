@@ -129,20 +129,6 @@
             font-size: 18px;
         }
 
-        textarea {
-            width: 100%;
-            height: calc(100vh - 160px);
-            background: var(--card-bg);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 15px;
-            box-sizing: border-box;
-            resize: none;
-            font-family: monospace;
-            font-size: 16px;
-        }
-
         .btn-action {
             background: #333;
             color: white;
@@ -156,7 +142,28 @@
             font-size: 15px;
         }
 
-        /* --- STYLES MODAL / POPUP CALENDRIER --- */
+        /* --- STYLE ONGLET NOTES --- */
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .note-title-link {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        /* --- STYLES DES MODALS (POPUPS) --- */
         .modal {
             display: none;
             position: fixed;
@@ -191,10 +198,10 @@
 
         .modal-header h3 { margin: 0; color: var(--accent-color); font-size: 18px; }
         .close-modal {
-            background: var(--danger);
+            background: #444;
             border: none;
             color: white;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
@@ -239,10 +246,84 @@
 
         .day-box .day-date { font-size: 10px; opacity: 0.8; margin-bottom: 3px; }
 
-        /* Couleurs du calendrier */
         .day-gray { background-color: var(--gray-day); border: 1px solid #444; }
         .day-orange { background-color: var(--orange-day); color: #121212; }
         .day-green { background-color: var(--green-day); }
+
+        /* --- STYLES INTERNES DE L'ÉDITEUR DE NOTES --- */
+        .note-editor-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .note-input-title {
+            width: 100%;
+            background: #2d2d2d;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
+
+        .note-textarea-body {
+            width: 100%;
+            background: #1a1a1a;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            box-sizing: border-box;
+            resize: none;
+            min-height: 150px;
+            overflow-y: hidden; /* Désactive la scrollbar de la zone de texte pour la laisser grandir */
+        }
+
+        .note-textarea-body:disabled, .note-input-title:disabled {
+            background: #151515;
+            color: #bbbbbb;
+            border-color: #222;
+        }
+
+        .note-actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-note-save {
+            flex: 1;
+            background: var(--green-day);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-note-save:disabled {
+            background: #2b4c3f;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .btn-note-edit {
+            flex: 1;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -282,10 +363,11 @@
 
     <!-- CONTENU : NOTES -->
     <div id="notes" class="tab-content">
-        <textarea id="notes-input" placeholder="Notes d'entraînement..." oninput="saveNotes()"></textarea>
+        <button class="btn-action" style="background: var(--accent-color); color: white; font-size: 16px; margin-bottom: 15px; margin-top: 0;" onclick="openNoteEditor(null)">+ Créer une note</button>
+        <div id="notes-list-container"></div>
     </div>
 
-    <!-- FENÊTRE POP-UP (MODAL) : CALENDRIER -->
+    <!-- FENÊTRE POP-UP : CALENDRIER -->
     <div id="calendar-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -300,6 +382,25 @@
         </div>
     </div>
 
+    <!-- FENÊTRE POP-UP : LECTEUR / ÉDITEUR DE NOTE -->
+    <div id="note-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="note-modal-title">Note</h3>
+                <button class="close-modal" onclick="closeNoteEditor()">Fermer</button>
+            </div>
+            <div class="note-editor-container">
+                <input type="text" id="note-edit-title" class="note-input-title" placeholder="Titre de la note...">
+                <textarea id="note-edit-body" class="note-textarea-body" placeholder="Écris ta note ici..." oninput="autoGrowTextarea(this)"></textarea>
+                
+                <div class="note-actions-row">
+                    <button id="note-btn-edit" class="btn-note-edit" onclick="setNoteMode('edit')">Modifier</button>
+                    <button id="note-btn-save" class="btn-note-save" onclick="saveActiveNote()">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- CONTEXTE ET NAVIGATION ---
         function switchTab(tabId, button) {
@@ -307,16 +408,17 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             button.classList.add('active');
+            if(tabId === 'notes') renderNotesList();
         }
 
         // --- ENREGISTREMENT ET ÉVOLUTION ---
         let habits = JSON.parse(localStorage.getItem('habits')) || [];
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
         let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; 
+        let notesArray = JSON.parse(localStorage.getItem('notesArray')) || []; // Structure: [{id: 123, title: "", body: ""}]
         
-        document.getElementById('notes-input').value = localStorage.getItem('notes') || "";
-
         let currentCalendarDate = new Date(); 
+        let activeNoteId = null; // Stocke l'ID de la note ouverte dans la pop-up
 
         function getTodayKey(date = new Date()) {
             const offset = date.getTimezoneOffset();
@@ -324,7 +426,6 @@
             return d.toISOString().split('T')[0];
         }
 
-        // Sauvegarde immédiate du score en direct
         function syncTodayHistory() {
             const todayKey = getTodayKey();
             const total = habits.length;
@@ -355,7 +456,7 @@
                     </div>`;
             });
             localStorage.setItem('habits', JSON.stringify(habits));
-            syncTodayHistory(); // Met à jour le score en temps réel
+            syncTodayHistory();
         }
 
         function addDaily() {
@@ -377,7 +478,6 @@
             renderHabits();
         }
 
-        // Action manuelle (ne fige pas la journée passée à 0)
         function resetHabitsManual() {
             habits.forEach(h => h.done = false);
             renderHabits();
@@ -424,8 +524,121 @@
             renderTodos();
         }
 
-        function saveNotes() {
-            localStorage.setItem('notes', document.getElementById('notes-input').value);
+        // --- SYSTEME DE NOTES COMPLET ---
+        function renderNotesList() {
+            const container = document.getElementById('notes-list-container');
+            container.innerHTML = '';
+            
+            if(notesArray.length === 0) {
+                container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 20px;">Aucune note pour le moment.</p>`;
+                return;
+            }
+
+            notesArray.forEach(note => {
+                container.innerHTML += `
+                    <div class="note-item">
+                        <span class="note-title-link" onclick="openNoteEditor(${note.id})">${note.title || "Sans titre"}</span>
+                        <button class="delete-btn" onclick="deleteNote(${note.id})">X</button>
+                    </div>
+                `;
+            });
+        }
+
+        function openNoteEditor(id) {
+            const modal = document.getElementById('note-modal');
+            const titleInput = document.getElementById('note-edit-title');
+            const bodyInput = document.getElementById('note-edit-body');
+            
+            activeNoteId = id;
+            
+            if(id === null) {
+                // Nouvelle note -> Mode écriture directement
+                document.getElementById('note-modal-title').innerText = "Nouvelle Note";
+                titleInput.value = "";
+                bodyInput.value = "";
+                setNoteMode('edit');
+            } else {
+                // Note existante -> Trouver les données et ouvrir en Mode Lecture
+                document.getElementById('note-modal-title').innerText = "Lecture de la Note";
+                const note = notesArray.find(n => n.id === id);
+                titleInput.value = note.title;
+                bodyInput.value = note.body;
+                setNoteMode('read');
+            }
+            
+            modal.style.display = 'flex';
+            // Ajustement automatique initial de la taille du textarea
+            setTimeout(() => autoGrowTextarea(bodyInput), 50);
+        }
+
+        function setNoteMode(mode) {
+            const titleInput = document.getElementById('note-edit-title');
+            const bodyInput = document.getElementById('note-edit-body');
+            const btnEdit = document.getElementById('note-btn-edit');
+            const btnSave = document.getElementById('note-btn-save');
+
+            if(mode === 'edit') {
+                titleInput.disabled = false;
+                bodyInput.disabled = false;
+                btnEdit.style.display = 'none';
+                btnSave.disabled = false;
+            } else {
+                // Mode lecture
+                titleInput.disabled = true;
+                bodyInput.disabled = true;
+                btnEdit.style.display = 'block';
+                btnSave.disabled = true;
+            }
+        }
+
+        function autoGrowTextarea(element) {
+            element.style.height = "auto";
+            element.style.height = element.scrollHeight + "px";
+        }
+
+        function saveActiveNote() {
+            const titleInput = document.getElementById('note-edit-title');
+            const bodyInput = document.getElementById('note-edit-body');
+            
+            const titleValue = titleInput.value.trim() || "Sans titre";
+            const bodyValue = bodyInput.value;
+
+            if(activeNoteId === null) {
+                // Création
+                const newNote = {
+                    id: Date.now(),
+                    title: titleValue,
+                    body: bodyValue
+                };
+                notesArray.push(newNote);
+                activeNoteId = newNote.id; // Devient la note active
+            } else {
+                // Mise à jour
+                const noteIndex = notesArray.findIndex(n => n.id === activeNoteId);
+                if(noteIndex !== -1) {
+                    notesArray[noteIndex].title = titleValue;
+                    notesArray[noteIndex].body = bodyValue;
+                }
+            }
+
+            localStorage.setItem('notesArray', JSON.stringify(notesArray));
+            renderNotesList();
+            setNoteMode('read'); // Repasse automatiquement en lecture après enregistrement
+            document.getElementById('note-modal-title').innerText = "Lecture de la Note";
+        }
+
+        function deleteNote(id) {
+            const confirmDelete = confirm("Voulez-vous vraiment supprimer cette note ?");
+            if(confirmDelete) {
+                notesArray = notesArray.filter(n => n.id !== id);
+                localStorage.setItem('notesArray', JSON.stringify(notesArray));
+                renderNotesList();
+            }
+        }
+
+        function closeNoteEditor() {
+            document.getElementById('note-modal').style.display = 'none';
+            activeNoteId = null;
         }
 
         // --- LOGIQUE DU CALENDRIER DE PROGRESSION ---
@@ -468,7 +681,6 @@
                 let checkedCount = 0;
                 let totalCount = habits.length; 
 
-                // Si le jour possède un historique figé, on l'affiche en priorité
                 if (history[dateKey]) {
                     checkedCount = history[dateKey].checked;
                     totalCount = history[dateKey].total;
@@ -476,7 +688,6 @@
                     checkedCount = habits.filter(h => h.done).length;
                     totalCount = habits.length;
                 } else {
-                    // Jours passés sans activité ou jours futurs
                     checkedCount = 0;
                     totalCount = habits.length;
                 }
@@ -498,7 +709,6 @@
                         }
                     }
                 } else {
-                    // Toujours gris pour le futur
                     colorClass = "day-gray";
                     checkedCount = 0;
                     totalCount = habits.length;
@@ -513,18 +723,16 @@
             }
         }
 
-        // --- SÉCURITÉ MINUIT CHRONO ---
+        // --- COMPTEUR MINUIT CHRONO ---
         function checkMidnight() {
             setInterval(() => {
                 const now = new Date();
                 if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
                     
-                    // 1. Déterminer la clé d'hier (le jour qui vient de s'achever à l'instant)
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yesterdayKey = getTodayKey(yesterday);
                     
-                    // 2. Figer DÉFINITIVEMENT le score d'hier dans l'historique
                     const total = habits.length;
                     const checked = habits.filter(h => h.done).length;
                     if (total > 0) {
@@ -532,15 +740,12 @@
                     }
                     localStorage.setItem('habitHistory', JSON.stringify(history));
 
-                    // 3. APRES la sauvegarde, effectuer le reset pour le nouveau jour
                     habits.forEach(h => h.done = false);
                     localStorage.setItem('habits', JSON.stringify(habits));
                     
-                    // 4. Nettoyer la To-Do des éléments terminés
                     todos = todos.filter(todo => !todo.done);
                     renderTodos();
                     
-                    // 5. Mettre à jour l'affichage écran
                     renderHabits();
                 }
             }, 1000);
@@ -549,6 +754,7 @@
         // Lancement initial
         renderHabits();
         renderTodos();
+        renderNotesList();
         checkMidnight();
     </script>
 </body>
