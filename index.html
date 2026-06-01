@@ -276,7 +276,7 @@
             </div>
         </div>
         
-        <button class="btn-action" style="background: #222; border: 1px solid #444;" onclick="resetHabits()">🔄 Reset Dailies manuel</button>
+        <button class="btn-action" style="background: #222; border: 1px solid #444;" onclick="resetHabitsManual()">🔄 Reset Dailies manuel</button>
         <button class="btn-action" style="background: var(--accent-color); color: #121212; font-size: 16px; margin-top: 20px;" onclick="openCalendar()">📊 Voir la progression</button>
     </div>
 
@@ -312,20 +312,19 @@
         // --- ENREGISTREMENT ET ÉVOLUTION ---
         let habits = JSON.parse(localStorage.getItem('habits')) || [];
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
-        let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; // Structure: {"YYYY-MM-DD": {checked: 2, total: 5}}
+        let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; 
         
         document.getElementById('notes-input').value = localStorage.getItem('notes') || "";
 
-        let currentCalendarDate = new Date(); // Date de visionnage du calendrier
+        let currentCalendarDate = new Date(); 
 
-        // Format utile pour les clés d'historique (ex: 2026-06-01)
         function getTodayKey(date = new Date()) {
             const offset = date.getTimezoneOffset();
             let d = new Date(date.getTime() - (offset*60*1000));
             return d.toISOString().split('T')[0];
         }
 
-        // Synchronise le score du jour actuel dans l'historique global
+        // Sauvegarde immédiate du score en direct
         function syncTodayHistory() {
             const todayKey = getTodayKey();
             const total = habits.length;
@@ -356,7 +355,7 @@
                     </div>`;
             });
             localStorage.setItem('habits', JSON.stringify(habits));
-            syncTodayHistory();
+            syncTodayHistory(); // Met à jour le score en temps réel
         }
 
         function addDaily() {
@@ -378,7 +377,8 @@
             renderHabits();
         }
 
-        function resetHabits() {
+        // Action manuelle (ne fige pas la journée passée à 0)
+        function resetHabitsManual() {
             habits.forEach(h => h.done = false);
             renderHabits();
         }
@@ -430,7 +430,7 @@
 
         // --- LOGIQUE DU CALENDRIER DE PROGRESSION ---
         function openCalendar() {
-            currentCalendarDate = new Date(); // Reset sur le mois actuel à l'ouverture
+            currentCalendarDate = new Date(); 
             buildCalendar();
             document.getElementById('calendar-modal').style.display = 'flex';
         }
@@ -448,63 +448,60 @@
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             
-            // Titre du mois
             const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             document.getElementById('calendar-month-title').innerText = `${monthNames[month]} ${year}`;
             
             const grid = document.getElementById('calendar-grid-container');
             grid.innerHTML = '';
             
-            // Nombre de jours dans le mois sélectionné
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const todayStr = getTodayKey(new Date());
 
             for (let day = 1; day <= daysInMonth; day++) {
-                // Créer l'objet Date pour la case courante
                 const thisDate = new Date(year, month, day);
                 const dateKey = getTodayKey(thisDate);
                 
-                // Formater la date en jj/mm
                 const dayDisplay = String(day).padStart(2, '0');
                 const monthDisplay = String(month + 1).padStart(2, '0');
                 const formattedDate = `${dayDisplay}/${monthDisplay}`;
 
-                // Récupérer les stats (si existantes)
                 let checkedCount = 0;
-                let totalCount = habits.length; // Valeur par défaut synchronisée avec la liste actuelle
+                let totalCount = habits.length; 
 
+                // Si le jour possède un historique figé, on l'affiche en priorité
                 if (history[dateKey]) {
                     checkedCount = history[dateKey].checked;
                     totalCount = history[dateKey].total;
                 } else if (dateKey === todayStr) {
                     checkedCount = habits.filter(h => h.done).length;
                     totalCount = habits.length;
+                } else {
+                    // Jours passés sans activité ou jours futurs
+                    checkedCount = 0;
+                    totalCount = habits.length;
                 }
 
-                // Déterminer le statut de couleur
-                let colorClass = "day-gray"; // Futur ou aucun daily configuré
+                let colorClass = "day-gray"; 
                 
-                if (thisDate <= new Date()) {
-                    // C'est aujourd'hui ou un jour passé
-                    if (totalCount > 0) {
-                        if (checkedCount === totalCount) {
-                            colorClass = "day-green"; // Tout validé
-                        } else if (checkedCount > 0) {
-                            colorClass = "day-orange"; // Partiellement validé
-                        } else {
-                            colorClass = "day-gray"; // Rien fait du tout
-                        }
-                    }
-                }
-
-                // Ajustement si le jour est strictement dans le futur (toujours gris, 0 / total)
                 const clearToday = new Date();
                 clearToday.setHours(0,0,0,0);
                 const clearThisDate = new Date(year, month, day, 0,0,0,0);
-                if (clearThisDate > clearToday) {
+
+                if (clearThisDate <= clearToday) {
+                    if (totalCount > 0) {
+                        if (checkedCount === totalCount) {
+                            colorClass = "day-green"; 
+                        } else if (checkedCount > 0) {
+                            colorClass = "day-orange"; 
+                        } else {
+                            colorClass = "day-gray"; 
+                        }
+                    }
+                } else {
+                    // Toujours gris pour le futur
                     colorClass = "day-gray";
                     checkedCount = 0;
-                    totalCount = habits.length; 
+                    totalCount = habits.length;
                 }
 
                 grid.innerHTML += `
@@ -516,17 +513,35 @@
             }
         }
 
-        // --- COMPTEUR MINUIT POUR RESET DAILIES & TO-DO ---
+        // --- SÉCURITÉ MINUIT CHRONO ---
         function checkMidnight() {
             setInterval(() => {
                 const now = new Date();
                 if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-                    // 1. Reset Automatique du Daily
-                    resetHabits();
                     
-                    // 2. Nettoyage de la To-Do (uniquement les cochées virent)
+                    // 1. Déterminer la clé d'hier (le jour qui vient de s'achever à l'instant)
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayKey = getTodayKey(yesterday);
+                    
+                    // 2. Figer DÉFINITIVEMENT le score d'hier dans l'historique
+                    const total = habits.length;
+                    const checked = habits.filter(h => h.done).length;
+                    if (total > 0) {
+                        history[yesterdayKey] = { checked: checked, total: total };
+                    }
+                    localStorage.setItem('habitHistory', JSON.stringify(history));
+
+                    // 3. APRES la sauvegarde, effectuer le reset pour le nouveau jour
+                    habits.forEach(h => h.done = false);
+                    localStorage.setItem('habits', JSON.stringify(habits));
+                    
+                    // 4. Nettoyer la To-Do des éléments terminés
                     todos = todos.filter(todo => !todo.done);
                     renderTodos();
+                    
+                    // 5. Mettre à jour l'affichage écran
+                    renderHabits();
                 }
             }, 1000);
         }
