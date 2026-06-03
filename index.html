@@ -283,7 +283,7 @@
             box-sizing: border-box;
             resize: none;
             min-height: 150px;
-            overflow-y: hidden; /* Désactive la scrollbar de la zone de texte pour la laisser grandir */
+            overflow-y: hidden;
         }
 
         .note-textarea-body:disabled, .note-input-title:disabled {
@@ -334,7 +334,6 @@
         <button class="tab-btn" onclick="switchTab('notes', this)">NOTES</button>
     </div>
 
-    <!-- CONTENU : TO-DO -->
     <div id="todo" class="tab-content active">
         <div id="todo-list"></div>
         <div class="input-block">
@@ -346,7 +345,6 @@
         <button class="btn-action" style="background: #2d2d2d; margin-top: 20px;" onclick="manualResetTodo()">🔄 Nettoyer les tâches cochées</button>
     </div>
 
-    <!-- CONTENU : DAILY -->
     <div id="daily" class="tab-content">
         <div id="habits-list"></div>
         
@@ -361,13 +359,11 @@
         <button class="btn-action" style="background: var(--accent-color); color: #121212; font-size: 16px; margin-top: 20px;" onclick="openCalendar()">📊 Voir la progression</button>
     </div>
 
-    <!-- CONTENU : NOTES -->
     <div id="notes" class="tab-content">
         <button class="btn-action" style="background: var(--accent-color); color: white; font-size: 16px; margin-bottom: 15px; margin-top: 0;" onclick="openNoteEditor(null)">+ Créer une note</button>
         <div id="notes-list-container"></div>
     </div>
 
-    <!-- FENÊTRE POP-UP : CALENDRIER -->
     <div id="calendar-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -382,7 +378,6 @@
         </div>
     </div>
 
-    <!-- FENÊTRE POP-UP : LECTEUR / ÉDITEUR DE NOTE -->
     <div id="note-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -415,15 +410,44 @@
         let habits = JSON.parse(localStorage.getItem('habits')) || [];
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
         let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; 
-        let notesArray = JSON.parse(localStorage.getItem('notesArray')) || []; // Structure: [{id: 123, title: "", body: ""}]
+        let notesArray = JSON.parse(localStorage.getItem('notesArray')) || []; 
         
         let currentCalendarDate = new Date(); 
-        let activeNoteId = null; // Stocke l'ID de la note ouverte dans la pop-up
+        let activeNoteId = null; 
 
         function getTodayKey(date = new Date()) {
             const offset = date.getTimezoneOffset();
             let d = new Date(date.getTime() - (offset*60*1000));
             return d.toISOString().split('T')[0];
+        }
+
+        // --- SYSTÈME INTELLIGENT DE TRANSITION DU JOUR (ANTI-BUG DE MINUIT) ---
+        function checkDayChange() {
+            const todayKey = getTodayKey(new Date());
+            const lastOpenDate = localStorage.getItem('lastOpenDate');
+
+            // Si l'application détecte un changement de jour par rapport à la dernière ouverture
+            if (lastOpenDate && lastOpenDate !== todayKey) {
+                
+                // 1. Sauvegarde définitive de l'état du jour précédent dans l'historique global
+                const total = habits.length;
+                const checked = habits.filter(h => h.done).length;
+                if (total > 0) {
+                    history[lastOpenDate] = { checked: checked, total: total };
+                    localStorage.setItem('habitHistory', JSON.stringify(history));
+                }
+
+                // 2. Décochage complet de tous les objectifs quotidiens (Reset Daily)
+                habits.forEach(h => h.done = false);
+                localStorage.setItem('habits', JSON.stringify(habits));
+                
+                // 3. Nettoyage automatique des tâches uniques (To-Do) complétées la veille
+                todos = todos.filter(todo => !todo.done);
+                localStorage.setItem('todos', JSON.stringify(todos));
+            }
+            
+            // On met à jour l'indicateur de la dernière date de visite
+            localStorage.setItem('lastOpenDate', todayKey);
         }
 
         function syncTodayHistory() {
@@ -552,13 +576,11 @@
             activeNoteId = id;
             
             if(id === null) {
-                // Nouvelle note -> Mode écriture directement
                 document.getElementById('note-modal-title').innerText = "Nouvelle Note";
                 titleInput.value = "";
                 bodyInput.value = "";
                 setNoteMode('edit');
             } else {
-                // Note existante -> Trouver les données et ouvrir en Mode Lecture
                 document.getElementById('note-modal-title').innerText = "Lecture de la Note";
                 const note = notesArray.find(n => n.id === id);
                 titleInput.value = note.title;
@@ -567,7 +589,6 @@
             }
             
             modal.style.display = 'flex';
-            // Ajustement automatique initial de la taille du textarea
             setTimeout(() => autoGrowTextarea(bodyInput), 50);
         }
 
@@ -583,7 +604,6 @@
                 btnEdit.style.display = 'none';
                 btnSave.disabled = false;
             } else {
-                // Mode lecture
                 titleInput.disabled = true;
                 bodyInput.disabled = true;
                 btnEdit.style.display = 'block';
@@ -604,16 +624,14 @@
             const bodyValue = bodyInput.value;
 
             if(activeNoteId === null) {
-                // Création
                 const newNote = {
                     id: Date.now(),
                     title: titleValue,
                     body: bodyValue
                 };
                 notesArray.push(newNote);
-                activeNoteId = newNote.id; // Devient la note active
+                activeNoteId = newNote.id;
             } else {
-                // Mise à jour
                 const noteIndex = notesArray.findIndex(n => n.id === activeNoteId);
                 if(noteIndex !== -1) {
                     notesArray[noteIndex].title = titleValue;
@@ -623,7 +641,7 @@
 
             localStorage.setItem('notesArray', JSON.stringify(notesArray));
             renderNotesList();
-            setNoteMode('read'); // Repasse automatiquement en lecture après enregistrement
+            setNoteMode('read');
             document.getElementById('note-modal-title').innerText = "Lecture de la Note";
         }
 
@@ -723,39 +741,14 @@
             }
         }
 
-        // --- COMPTEUR MINUIT CHRONO ---
-        function checkMidnight() {
-            setInterval(() => {
-                const now = new Date();
-                if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-                    
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayKey = getTodayKey(yesterday);
-                    
-                    const total = habits.length;
-                    const checked = habits.filter(h => h.done).length;
-                    if (total > 0) {
-                        history[yesterdayKey] = { checked: checked, total: total };
-                    }
-                    localStorage.setItem('habitHistory', JSON.stringify(history));
+        // --- COMPTEUR CHRONO / ENREGISTREMENT AU CHARGEMENT ---
+        // 1. On vérifie d'abord si on a changé de jour pour archiver et reset si nécessaire
+        checkDayChange();
 
-                    habits.forEach(h => h.done = false);
-                    localStorage.setItem('habits', JSON.stringify(habits));
-                    
-                    todos = todos.filter(todo => !todo.done);
-                    renderTodos();
-                    
-                    renderHabits();
-                }
-            }, 1000);
-        }
-
-        // Lancement initial
+        // 2. Initialisation des composants graphiques
         renderHabits();
         renderTodos();
         renderNotesList();
-        checkMidnight();
     </script>
 </body>
 </html>
