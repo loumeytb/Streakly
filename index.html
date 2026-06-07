@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mon Suivi Perso</title>
     <style>
         :root {
@@ -15,6 +15,8 @@
             --gray-day: #333333;
             --orange-day: #ff9f43;
             --green-day: #10ac84;
+            --purple-admin: #8e44ad;
+            --xp-color: #d6002a;
         }
 
         body {
@@ -36,7 +38,7 @@
             display: flex;
             justify-content: space-around;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            z-index: 1000;
+            z-index: 9999;
         }
 
         .tab-btn {
@@ -64,7 +66,12 @@
             border-radius: 2px 2px 0 0;
         }
 
-        .tab-content { display: none; padding: 20px; box-sizing: border-box; padding-bottom: 80px; }
+        .tab-content { 
+            display: none; 
+            padding: 20px; 
+            box-sizing: border-box; 
+            padding-bottom: 140px; 
+        } 
         .tab-content.active { display: block; }
 
         /* Éléments des listes */
@@ -109,7 +116,7 @@
         }
 
         .input-group { display: flex; }
-        .input-group input[type="text"] {
+        .input-group input[type="text"], .input-group input[type="number"], .input-group input[type="date"] {
             flex: 1;
             padding: 12px;
             border: none;
@@ -142,7 +149,33 @@
             font-size: 15px;
         }
 
-        /* --- STYLE ONGLET NOTES --- */
+        .btn-admin-toggle {
+            display: none; 
+            background: var(--purple-admin);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-set-username {
+            background: var(--accent-color);
+            color: #121212;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Notes */
         .note-item {
             display: flex;
             justify-content: space-between;
@@ -163,7 +196,7 @@
             margin-right: 10px;
         }
 
-        /* --- STYLES DES MODALS (POPUPS) --- */
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -172,7 +205,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.85);
-            z-index: 2000;
+            z-index: 1000000;
             justify-content: center;
             align-items: center;
         }
@@ -194,9 +227,11 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         .modal-header h3 { margin: 0; color: var(--accent-color); font-size: 18px; }
+        .modal-header h3.admin-title { color: var(--purple-admin); }
         .close-modal {
             background: #444;
             border: none;
@@ -207,6 +242,86 @@
             cursor: pointer;
         }
 
+        .settings-scroll-body {
+            flex: 1;
+            overflow-y: auto; 
+            padding-right: 5px;
+        }
+
+        .settings-separator {
+            border: 0;
+            height: 2px;
+            background: #333;
+            margin: 20px 0 10px 0;
+        }
+
+        .settings-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .settings-row {
+            background: #252525;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .settings-row p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #dddddd;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            background: #2d2d2d;
+            border: 1px dashed var(--purple-admin);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .version-tag-box {
+            display: flex;
+            justify-content: center;
+            margin: 25px 0 10px 0;
+        }
+
+        .version-badge {
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: var(--text-dim);
+            font-family: monospace;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Admin */
+        .admin-section {
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .admin-section p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Calendrier */
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -243,19 +358,18 @@
             box-sizing: border-box;
             color: white;
         }
-
         .day-box .day-date { font-size: 10px; opacity: 0.8; margin-bottom: 3px; }
 
         .day-gray { background-color: var(--gray-day); border: 1px solid #444; }
         .day-orange { background-color: var(--orange-day); color: #121212; }
         .day-green { background-color: var(--green-day); }
 
-        /* --- STYLES INTERNES DE L'ÉDITEUR DE NOTES --- */
+        /* Éditeur de notes */
         .note-editor-container {
             display: flex;
             flex-direction: column;
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden; 
         }
 
         .note-input-title {
@@ -269,10 +383,12 @@
             font-weight: bold;
             box-sizing: border-box;
             margin-bottom: 12px;
+            flex-shrink: 0;
         }
 
         .note-textarea-body {
             width: 100%;
+            flex: 1; 
             background: #1a1a1a;
             color: white;
             border: 1px solid #333;
@@ -282,8 +398,7 @@
             font-family: inherit;
             box-sizing: border-box;
             resize: none;
-            min-height: 150px;
-            overflow-y: hidden;
+            overflow-y: auto; 
         }
 
         .note-textarea-body:disabled, .note-input-title:disabled {
@@ -296,6 +411,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-shrink: 0;
         }
 
         .btn-note-save {
@@ -324,6 +440,176 @@
             font-weight: bold;
             cursor: pointer;
         }
+
+        /* Profil fixe en bas */
+        .profile-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-bg) !important;
+            border-top: 2px solid #2d2d2d;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.6);
+            padding: 12px 15px 22px 15px; 
+            box-sizing: border-box;
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999999;
+        }
+
+        .profile-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-right: 15px;
+        }
+
+        .username-container {
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+            min-height: 32px;
+        }
+
+        .streak-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--orange-day);
+            transition: opacity 0.3s ease;
+        }
+        
+        .streak-display.inactive {
+            opacity: 0.4;
+            color: var(--text-dim);
+        }
+
+        .boost-display {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(16, 172, 132, 0.2);
+            border: 1px solid var(--green-day);
+            color: var(--green-day);
+            font-size: 13px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 4px;
+            transition: background 0.2s;
+        }
+
+        .xp-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .xp-bar-bg {
+            flex: 1;
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            width: 0%; 
+            height: 100%;
+            background: var(--xp-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .xp-text {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        .badges-placeholder {
+            display: flex;
+            gap: 5px;
+            margin-top: 2px;
+            min-height: 18px;
+        }
+        
+        .badge-slot {
+            width: 16px;
+            height: 16px;
+            border: 1px dashed #444;
+            border-radius: 50%;
+        }
+
+        .profile-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .profile-actions-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px; 
+        }
+
+        .btn-profile-icon {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer; 
+            opacity: 0.8;
+        }
+
+        .boost-modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            border: 1px solid #333;
+        }
+        .boost-modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--green-day);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .boost-stat-line {
+            font-size: 18px;
+            font-weight: bold;
+            font-family: monospace;
+            color: white;
+            background: #151515;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .boost-desc-line {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -343,18 +629,17 @@
             </div>
         </div>
         <button class="btn-action" style="background: #2d2d2d; margin-top: 20px;" onclick="manualResetTodo()">🔄 Nettoyer les tâches cochées</button>
+        <button id="main-admin-btn" class="btn-admin-toggle" onclick="openAdminPanel()">🛠️ Panneau de Test Admin</button>
     </div>
 
     <div id="daily" class="tab-content">
         <div id="habits-list"></div>
-        
         <div class="input-block">
             <div class="input-group">
                 <input type="text" id="daily-input" placeholder="Ajouter un objectif quotidien...">
                 <button onclick="addDaily()">+</button>
             </div>
         </div>
-        
         <button class="btn-action" style="background: #222; border: 1px solid #444;" onclick="resetHabitsManual()">🔄 Reset Dailies manuel</button>
         <button class="btn-action" style="background: var(--accent-color); color: #121212; font-size: 16px; margin-top: 20px;" onclick="openCalendar()">📊 Voir la progression</button>
     </div>
@@ -362,6 +647,70 @@
     <div id="notes" class="tab-content">
         <button class="btn-action" style="background: var(--accent-color); color: white; font-size: 16px; margin-bottom: 15px; margin-top: 0;" onclick="openNoteEditor(null)">+ Créer une note</button>
         <div id="notes-list-container"></div>
+    </div>
+
+    <div class="profile-bar" id="main-profile-bar">
+        <div class="profile-left">
+            <div id="username-area" class="username-container">
+                <span id="display-name">---</span>
+                <div id="streak-zone" class="streak-display inactive" title="Série de jours complétés">
+                    🔥<span id="streak-count">0</span>
+                </div>
+                <div id="boost-badge" class="boost-display" onclick="openBoostModal()" title="Voir les détails du boost">
+                    <span id="boost-factor">x1.00</span>
+                </div>
+            </div>
+            <div class="xp-container">
+                <div class="xp-bar-bg">
+                    <div id="xp-bar-fill" class="xp-bar-fill"></div>
+                </div>
+                <span id="xp-text" class="xp-text">LVL 1 · 0/1000 XP</span>
+            </div>
+            <div class="badges-placeholder">
+                <div class="badge-slot"></div>
+                <div class="badge-slot"></div>
+                <div class="badge-slot"></div>
+            </div>
+        </div>
+        <div class="profile-right">
+            <div class="profile-actions-row">
+                <button class="btn-profile-icon" title="Mailbox">📬</button>
+                <button class="btn-profile-icon" title="Paramètres" onclick="openSettingsModal()">⚙️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Paramètres de l'application</h3>
+                <button class="close-modal" onclick="closeSettingsModal()">Fermer</button>
+            </div>
+            <div class="settings-scroll-body">
+                <div class="settings-section-title">👤 Profil</div>
+                <div class="settings-row">
+                    <p>Configure ou modifie ton identifiant d'utilisateur sur cet appareil.</p>
+                    <button class="btn-action" style="background: var(--accent-color); color: #121212; margin-top: 5px;" onclick="promptUsername()">✏️ Changer mon pseudo</button>
+                </div>
+                <hr class="settings-separator">
+                <div class="settings-section-title">📱 Préférences Générales</div>
+                <div class="settings-row">
+                    <p>Langue de l'interface : <strong>Français</strong></p>
+                </div>
+                <hr class="settings-separator">
+                <div class="settings-section-title">🛠️ Zone Admin / Développeur</div>
+                <div class="settings-row">
+                    <p>Dépose ton fichier de clé secret (.txt) pour activer temporairement les menus de débogage.</p>
+                    <label class="file-upload-label">
+                        📁 Sélectionner le fichier de clé (.txt)
+                        <input type="file" accept=".txt" onchange="importAdminFile(event)" style="display: none;">
+                    </label>
+                </div>
+                <div class="version-tag-box">
+                    <div class="version-badge">v2.6.1</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="calendar-modal" class="modal">
@@ -386,8 +735,7 @@
             </div>
             <div class="note-editor-container">
                 <input type="text" id="note-edit-title" class="note-input-title" placeholder="Titre de la note...">
-                <textarea id="note-edit-body" class="note-textarea-body" placeholder="Écris ta note ici..." oninput="autoGrowTextarea(this)"></textarea>
-                
+                <textarea id="note-edit-body" class="note-textarea-body" placeholder="Écris ta note ici..."></textarea>
                 <div class="note-actions-row">
                     <button id="note-btn-edit" class="btn-note-edit" onclick="setNoteMode('edit')">Modifier</button>
                     <button id="note-btn-save" class="btn-note-save" onclick="saveActiveNote()">Sauvegarder</button>
@@ -396,8 +744,87 @@
         </div>
     </div>
 
+    <div id="admin-modal" class="modal">
+        <div class="modal-content" style="height: auto; max-height: 90%;">
+            <div class="modal-header">
+                <h3 class="admin-title">🛠️ Menu de Test & Débogage</h3>
+                <button class="close-modal" onclick="closeAdminPanel()">Fermer</button>
+            </div>
+            <div style="overflow-y: auto; padding-right: 5px;">
+                <div class="admin-section">
+                    <p><strong>1. Simuler un changement de jour :</strong></p>
+                    <div class="input-group">
+                        <input type="date" id="admin-date-input">
+                        <button onclick="adminApplyFakeDate()" style="background: var(--purple-admin); font-size: 14px;">Appliquer</button>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <p><strong>2. Forcer la valeur de la Streak :</strong></p>
+                    <div class="input-group">
+                        <input type="number" id="admin-streak-input" placeholder="Nombre de jours..." min="0">
+                        <button onclick="adminApplyOverrideStreak()" style="background: var(--purple-admin); font-size: 14px;">Forcer</button>
+                    </div>
+                    <small id="admin-streak-status" style="color: var(--text-dim); display:block; margin-top:5px;">Mode : Calcul dynamique (Normal)</small>
+                </div>
+                <div class="admin-section">
+                    <p><strong>3. Configurer l'XP globale :</strong></p>
+                    <div class="input-group">
+                        <input type="number" id="admin-xp-input" placeholder="Total d'XP désiré..." min="0">
+                        <button onclick="adminApplyXP()" style="background: var(--purple-admin); font-size: 14px;">Set XP</button>
+                    </div>
+                </div>
+                <div class="admin-section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+                    <p><strong>4. Zone de danger :</strong></p>
+                    <button class="btn-action" style="background: var(--danger); margin-top: 5px;" onclick="adminFullReset()">Wipe Historique & Data de Test</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="boost-modal" class="modal">
+        <div class="boost-modal-content">
+            <h3 class="boost-modal-title">🚀 Détails de ton Multiplicateur</h3>
+            <div id="boost-modal-stats" class="boost-stat-line">0%/150% max + 0%</div>
+            <div class="boost-desc-line">
+                Chaque jour de streak ajoute <strong>2%</strong> au boost, plafonné à <strong>150%</strong>. Tous les 10 jours de palier, un bonus de <strong>10% supplémentaires</strong> est définitivement acquis.
+            </div>
+            <button class="btn-action" style="background: #333;" onclick="closeBoostModal()">Fermer</button>
+        </div>
+    </div>
+
     <script>
-        // --- CONTEXTE ET NAVIGATION ---
+        const SECRET_KEY_HASH = "MON_CODE_SUPER_SECRET_99X";
+        let isCurrentSessionAdmin = false; 
+
+        function openSettingsModal() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function importAdminFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileContent = e.target.result.trim();
+                if (fileContent === SECRET_KEY_HASH) {
+                    isCurrentSessionAdmin = true;
+                    const btn = document.getElementById('main-admin-btn');
+                    if (btn) btn.style.display = 'block';
+                    closeSettingsModal();
+                    alert("🛠️ Mode Admin Activé ! Le bouton est visible dans l'onglet TO-DO.");
+                } else {
+                    alert("❌ Code secret invalide. Accès refusé.");
+                }
+                event.target.value = "";
+            };
+            reader.readAsText(file);
+        }
+
         function switchTab(tabId, button) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -406,47 +833,88 @@
             if(tabId === 'notes') renderNotesList();
         }
 
-        // --- ENREGISTREMENT ET ÉVOLUTION ---
         let habits = JSON.parse(localStorage.getItem('habits')) || [];
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
         let history = JSON.parse(localStorage.getItem('habitHistory')) || {}; 
         let notesArray = JSON.parse(localStorage.getItem('notesArray')) || []; 
         
+        let totalXP = localStorage.getItem('totalXP') !== null ? parseInt(localStorage.getItem('totalXP')) : 0;
+        let xpDailyRegistry = JSON.parse(localStorage.getItem('xpDailyRegistry')) || {};
+        
         let currentCalendarDate = new Date(); 
         let activeNoteId = null; 
 
+        let adminFakeDateStr = localStorage.getItem('adminFakeDate') || null;
+        let adminOverrideStreakVal = localStorage.getItem('adminOverrideStreak') !== null ? parseInt(localStorage.getItem('adminOverrideStreak')) : null;
+
         function getTodayKey(date = new Date()) {
+            if (adminFakeDateStr) return adminFakeDateStr;
             const offset = date.getTimezoneOffset();
             let d = new Date(date.getTime() - (offset*60*1000));
             return d.toISOString().split('T')[0];
         }
 
-        // --- SYSTÈME INTELLIGENT DE TRANSITION DU JOUR (ANTI-BUG DE MINUIT) ---
+        // --- FORMULE DE COURBE PYTHON ---
+        function calculateLevelAndRemainingXP(xp) {
+            let lvl = 1;
+            let tempXP = xp;
+            
+            while (true) {
+                let xpNeededForNext = 1000 + Math.floor(Math.pow(lvl - 1, 1.8) * 100);
+                if (tempXP >= xpNeededForNext) {
+                    tempXP -= xpNeededForNext;
+                    lvl++;
+                } else {
+                    return { level: lvl, currentXP: tempXP, nextLevelXP: xpNeededForNext };
+                }
+            }
+        }
+
+        function updateXPDisplay() {
+            const data = calculateLevelAndRemainingXP(totalXP);
+            const fillPercent = (data.currentXP / data.nextLevelXP) * 100;
+            
+            document.getElementById('xp-bar-fill').style.width = fillPercent + "%";
+            document.getElementById('xp-text').innerText = `LVL ${data.level} · ${data.currentXP}/${data.nextLevelXP} XP`;
+        }
+
+        function getDailyXPTracker() {
+            const today = getTodayKey();
+            if (!xpDailyRegistry[today]) {
+                xpDailyRegistry[today] = { todoCount: 0, dailyCount: 0, perfectDone: false };
+            }
+            return xpDailyRegistry[today];
+        }
+
+        function saveXPTracker() {
+            localStorage.setItem('xpDailyRegistry', JSON.stringify(xpDailyRegistry));
+            localStorage.setItem('totalXP', totalXP);
+            updateXPDisplay();
+        }
+
         function checkDayChange() {
             const todayKey = getTodayKey(new Date());
             const lastOpenDate = localStorage.getItem('lastOpenDate');
 
-            // Si l'application détecte un changement de jour par rapport à la dernière ouverture
             if (lastOpenDate && lastOpenDate !== todayKey) {
-                
-                // 1. Sauvegarde définitive de l'état du jour précédent dans l'historique global
                 const total = habits.length;
                 const checked = habits.filter(h => h.done).length;
+                
                 if (total > 0) {
                     history[lastOpenDate] = { checked: checked, total: total };
                     localStorage.setItem('habitHistory', JSON.stringify(history));
                 }
 
-                // 2. Décochage complet de tous les objectifs quotidiens (Reset Daily)
-                habits.forEach(h => h.done = false);
+                // Réinitialisation globale pour le nouveau jour
+                habits.forEach(h => {
+                    h.done = false;
+                    h.xpBlockedToday = false;
+                });
                 localStorage.setItem('habits', JSON.stringify(habits));
                 
-                // 3. Nettoyage automatique des tâches uniques (To-Do) complétées la veille
                 todos = todos.filter(todo => !todo.done);
                 localStorage.setItem('todos', JSON.stringify(todos));
             }
-            
-            // On met à jour l'indicateur de la dernière date de visite
             localStorage.setItem('lastOpenDate', todayKey);
         }
 
@@ -461,9 +929,86 @@
                 delete history[todayKey];
             }
             localStorage.setItem('habitHistory', JSON.stringify(history));
+            updateStreakDisplay();
+
+            if (total > 0 && checked === total) {
+                const tracker = getDailyXPTracker();
+                if (!tracker.perfectDone) {
+                    let multiplier = parseFloat(getCurrentMultiplierValue());
+                    totalXP += Math.floor(500 * multiplier);
+                    tracker.perfectDone = true;
+                    saveXPTracker();
+                    alert(`🌟 Perfect du jour ! +${Math.floor(500 * multiplier)} XP bonus accordés !`);
+                }
+            }
         }
 
-        // --- GESTION DE L'ONGLET DAILY ---
+        function calculateStreak() {
+            if (adminOverrideStreakVal !== null) return adminOverrideStreakVal;
+
+            let streak = 0;
+            let checkDate = adminFakeDateStr ? new Date(adminFakeDateStr) : new Date();
+            checkDate.setDate(checkDate.getDate() - 1);
+
+            while (true) {
+                const offset = checkDate.getTimezoneOffset();
+                let d = new Date(checkDate.getTime() - (offset*60*1000));
+                const prevKey = d.toISOString().split('T')[0];
+                
+                if (history[prevKey]) {
+                    const data = history[prevKey];
+                    if (data.total > 0 && data.checked >= 1) {
+                        streak++;
+                    } else {
+                        break; 
+                    }
+                } else {
+                    break; 
+                }
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            return streak;
+        }
+
+        function getCurrentMultiplierValue() {
+            let baseStreak = calculateStreak();
+            const bonusStreakBase = Math.min(baseStreak * 2, 150);
+            const paliersAccumules = Math.floor(baseStreak / 10) * 10;
+            const multiplicateurTotal = bonusStreakBase + paliersAccumules;
+            return (1 + (multiplicateurTotal / 100)).toFixed(2);
+        }
+
+        function updateStreakDisplay() {
+            const streakContainer = document.getElementById('streak-zone');
+            if (!streakContainer) return;
+            
+            let baseStreak = calculateStreak();
+
+            const countText = document.getElementById('streak-count');
+            if (countText) countText.innerText = baseStreak;
+
+            if (baseStreak > 0) streakContainer.classList.remove('inactive');
+            else streakContainer.classList.add('inactive');
+            
+            const cmValue = getCurrentMultiplierValue();
+            
+            const boostText = document.getElementById('boost-factor');
+            if (boostText) boostText.innerText = `x${cmValue}`;
+        }
+
+        function openBoostModal() {
+            let baseStreak = calculateStreak();
+            const bonusStreakBase = Math.min(baseStreak * 2, 150);
+            const paliersAccumules = Math.floor(baseStreak / 10) * 10;
+            
+            document.getElementById('boost-modal-stats').innerText = `${bonusStreakBase}%/150% max + ${paliersAccumules}%`;
+            document.getElementById('boost-modal').style.display = 'flex';
+        }
+
+        function closeBoostModal() {
+            document.getElementById('boost-modal').style.display = 'none';
+        }
+
         function renderHabits() {
             const list = document.getElementById('habits-list');
             list.innerHTML = '';
@@ -479,35 +1024,62 @@
                         <button class="delete-btn" style="padding: 3px 8px; font-size: 12px;" onclick="deleteDaily(${index})">X</button>
                     </div>`;
             });
-            localStorage.setItem('habits', JSON.stringify(habits));
-            syncTodayHistory();
         }
 
         function addDaily() {
             const input = document.getElementById('daily-input');
             if (input.value.trim() !== "") {
-                habits.push({ text: input.value.trim(), done: false });
+                habits.push({ text: input.value.trim(), done: false, xpBlockedToday: false });
                 input.value = "";
+                localStorage.setItem('habits', JSON.stringify(habits));
+                syncTodayHistory();
                 renderHabits();
             }
         }
 
         function toggleHabit(index) {
-            habits[index].done = !habits[index].done;
+            const habit = habits[index];
+            habit.done = !habit.done;
+
+            if (habit.done) {
+                if (habit.xpBlockedToday) {
+                    alert("Attention : Cet objectif a été décoché aujourd'hui. Aucun gain d'XP ne sera accordé.");
+                } else {
+                    const tracker = getDailyXPTracker();
+                    if (tracker.dailyCount < 10) {
+                        tracker.dailyCount++;
+                        let multiplier = parseFloat(getCurrentMultiplierValue());
+                        totalXP += Math.floor(250 * multiplier);
+                        saveXPTracker();
+                    }
+                }
+            } else {
+                habit.xpBlockedToday = true;
+                alert("Sécurité Anti-Triche : Objectif décoché. XP bloquée sur cet item pour aujourd'hui.");
+            }
+
+            localStorage.setItem('habits', JSON.stringify(habits));
+            syncTodayHistory();
             renderHabits();
         }
 
         function deleteDaily(index) {
             habits.splice(index, 1);
+            localStorage.setItem('habits', JSON.stringify(habits));
+            syncTodayHistory();
             renderHabits();
         }
 
         function resetHabitsManual() {
-            habits.forEach(h => h.done = false);
+            habits.forEach(h => {
+                h.done = false;
+                h.xpBlockedToday = false;
+            });
+            localStorage.setItem('habits', JSON.stringify(habits));
+            syncTodayHistory();
             renderHabits();
         }
 
-        // --- GESTION DE L'ONGLET TO-DO ---
         function renderTodos() {
             const list = document.getElementById('todo-list');
             list.innerHTML = '';
@@ -521,50 +1093,69 @@
                         <button class="delete-btn" onclick="deleteTodo(${index})">X</button>
                     </div>`;
             });
-            localStorage.setItem('todos', JSON.stringify(todos));
         }
 
+        // Ajout d'une tâche unique
         function addTodo() {
             const input = document.getElementById('todo-input');
             if(input.value.trim() !== "") {
-                todos.push({ text: input.value.trim(), done: false });
+                todos.push({ text: input.value.trim(), done: false, xpBlockedToday: false });
                 input.value = "";
+                localStorage.setItem('todos', JSON.stringify(todos));
                 renderTodos();
             }
         }
 
         function toggleTodo(index) {
-            todos[index].done = !todos[index].done;
+            const todo = todos[index];
+            todo.done = !todo.done;
+
+            if (todo.done) {
+                if (todo.xpBlockedToday) {
+                    alert("Attention : Cette tâche a été décochée aujourd'hui. Aucun gain d'XP.");
+                } else {
+                    const tracker = getDailyXPTracker();
+                    if (tracker.todoCount < 5) {
+                        tracker.todoCount++;
+                        let multiplier = parseFloat(getCurrentMultiplierValue());
+                        totalXP += Math.floor(100 * multiplier);
+                        saveXPTracker();
+                    }
+                }
+            } else {
+                todo.xpBlockedToday = true;
+                alert("Sécurité Anti-Triche : To-Do décochée. XP bloquée sur cet item définitivement.");
+            }
+
+            localStorage.setItem('todos', JSON.stringify(todos));
             renderTodos();
         }
 
         function deleteTodo(index) {
             todos.splice(index, 1);
+            localStorage.setItem('todos', JSON.stringify(todos));
             renderTodos();
         }
 
         function manualResetTodo() {
             todos = todos.filter(todo => !todo.done);
+            localStorage.setItem('todos', JSON.stringify(todos));
             renderTodos();
         }
 
-        // --- SYSTEME DE NOTES COMPLET ---
         function renderNotesList() {
             const container = document.getElementById('notes-list-container');
             container.innerHTML = '';
-            
             if(notesArray.length === 0) {
                 container.innerHTML = `<p style="color: var(--text-dim); text-align: center; margin-top: 20px;">Aucune note pour le moment.</p>`;
                 return;
             }
-
             notesArray.forEach(note => {
                 container.innerHTML += `
                     <div class="note-item">
                         <span class="note-title-link" onclick="openNoteEditor(${note.id})">${note.title || "Sans titre"}</span>
                         <button class="delete-btn" onclick="deleteNote(${note.id})">X</button>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
@@ -572,9 +1163,7 @@
             const modal = document.getElementById('note-modal');
             const titleInput = document.getElementById('note-edit-title');
             const bodyInput = document.getElementById('note-edit-body');
-            
             activeNoteId = id;
-            
             if(id === null) {
                 document.getElementById('note-modal-title').innerText = "Nouvelle Note";
                 titleInput.value = "";
@@ -587,9 +1176,12 @@
                 bodyInput.value = note.body;
                 setNoteMode('read');
             }
-            
             modal.style.display = 'flex';
-            setTimeout(() => autoGrowTextarea(bodyInput), 50);
+        }
+
+        function closeNoteEditor() {
+            document.getElementById('note-modal').style.display = 'none';
+            activeNoteId = null;
         }
 
         function setNoteMode(mode) {
@@ -597,7 +1189,6 @@
             const bodyInput = document.getElementById('note-edit-body');
             const btnEdit = document.getElementById('note-btn-edit');
             const btnSave = document.getElementById('note-btn-save');
-
             if(mode === 'edit') {
                 titleInput.disabled = false;
                 bodyInput.disabled = false;
@@ -611,24 +1202,14 @@
             }
         }
 
-        function autoGrowTextarea(element) {
-            element.style.height = "auto";
-            element.style.height = element.scrollHeight + "px";
-        }
-
         function saveActiveNote() {
             const titleInput = document.getElementById('note-edit-title');
             const bodyInput = document.getElementById('note-edit-body');
-            
             const titleValue = titleInput.value.trim() || "Sans titre";
             const bodyValue = bodyInput.value;
 
             if(activeNoteId === null) {
-                const newNote = {
-                    id: Date.now(),
-                    title: titleValue,
-                    body: bodyValue
-                };
+                const newNote = { id: Date.now(), title: titleValue, body: bodyValue };
                 notesArray.push(newNote);
                 activeNoteId = newNote.id;
             } else {
@@ -638,7 +1219,6 @@
                     notesArray[noteIndex].body = bodyValue;
                 }
             }
-
             localStorage.setItem('notesArray', JSON.stringify(notesArray));
             renderNotesList();
             setNoteMode('read');
@@ -646,22 +1226,14 @@
         }
 
         function deleteNote(id) {
-            const confirmDelete = confirm("Voulez-vous vraiment supprimer cette note ?");
-            if(confirmDelete) {
+            if(confirm("Voulez-vous vraiment supprimer cette note ?")) {
                 notesArray = notesArray.filter(n => n.id !== id);
                 localStorage.setItem('notesArray', JSON.stringify(notesArray));
                 renderNotesList();
             }
         }
 
-        function closeNoteEditor() {
-            document.getElementById('note-modal').style.display = 'none';
-            activeNoteId = null;
-        }
-
-        // --- LOGIQUE DU CALENDRIER DE PROGRESSION ---
         function openCalendar() {
-            currentCalendarDate = new Date(); 
             buildCalendar();
             document.getElementById('calendar-modal').style.display = 'flex';
         }
@@ -678,23 +1250,20 @@
         function buildCalendar() {
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
-            
             const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             document.getElementById('calendar-month-title').innerText = `${monthNames[month]} ${year}`;
             
             const grid = document.getElementById('calendar-grid-container');
             grid.innerHTML = '';
-            
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const todayStr = getTodayKey(new Date());
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const thisDate = new Date(year, month, day);
-                const dateKey = getTodayKey(thisDate);
-                
-                const dayDisplay = String(day).padStart(2, '0');
-                const monthDisplay = String(month + 1).padStart(2, '0');
-                const formattedDate = `${dayDisplay}/${monthDisplay}`;
+                const offset = thisDate.getTimezoneOffset();
+                let dCalc = new Date(thisDate.getTime() - (offset*60*1000));
+                const dateKey = dCalc.toISOString().split('T')[0];
+                const formattedDate = `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}`;
 
                 let checkedCount = 0;
                 let totalCount = habits.length; 
@@ -705,50 +1274,159 @@
                 } else if (dateKey === todayStr) {
                     checkedCount = habits.filter(h => h.done).length;
                     totalCount = habits.length;
-                } else {
-                    checkedCount = 0;
-                    totalCount = habits.length;
                 }
 
                 let colorClass = "day-gray"; 
-                
-                const clearToday = new Date();
+                const clearToday = adminFakeDateStr ? new Date(adminFakeDateStr) : new Date();
                 clearToday.setHours(0,0,0,0);
                 const clearThisDate = new Date(year, month, day, 0,0,0,0);
 
                 if (clearThisDate <= clearToday) {
                     if (totalCount > 0) {
-                        if (checkedCount === totalCount) {
-                            colorClass = "day-green"; 
-                        } else if (checkedCount > 0) {
-                            colorClass = "day-orange"; 
-                        } else {
-                            colorClass = "day-gray"; 
-                        }
+                        if (checkedCount === totalCount) colorClass = "day-green"; 
+                        else if (checkedCount >= 1) colorClass = "day-orange"; 
                     }
-                } else {
-                    colorClass = "day-gray";
-                    checkedCount = 0;
-                    totalCount = habits.length;
                 }
 
                 grid.innerHTML += `
                     <div class="day-box ${colorClass}">
                         <span class="day-date">${formattedDate}</span>
                         <span>${checkedCount}/${totalCount}</span>
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
-        // --- COMPTEUR CHRONO / ENREGISTREMENT AU CHARGEMENT ---
-        // 1. On vérifie d'abord si on a changé de jour pour archiver et reset si nécessaire
-        checkDayChange();
+        function renderUsernameArea() {
+            const displayNameSpan = document.getElementById('display-name');
+            const savedUsername = localStorage.getItem('username');
 
-        // 2. Initialisation des composants graphiques
+            if (savedUsername && savedUsername.trim() !== "") {
+                displayNameSpan.innerText = savedUsername;
+            } else {
+                displayNameSpan.innerHTML = `<button type="button" class="btn-set-username" onclick="promptUsername()">Définir un pseudo</button>`;
+            }
+            updateStreakDisplay();
+        }
+
+        function promptUsername() {
+            setTimeout(() => {
+                const name = prompt("Bienvenue ! Quel est ton pseudo ?");
+                if (name && name.trim() !== "") {
+                    localStorage.setItem('username', name.trim());
+                    renderUsernameArea();
+                }
+            }, 50);
+        }
+
+        function openAdminPanel() {
+            if(!isCurrentSessionAdmin) return; 
+            document.getElementById('admin-modal').style.display = 'flex';
+            const dateInput = document.getElementById('admin-date-input');
+            if (adminFakeDateStr) {
+                dateInput.value = adminFakeDateStr;
+            } else {
+                const offset = new Date().getTimezoneOffset();
+                let today = new Date(new Date().getTime() - (offset*60*1000));
+                dateInput.value = today.toISOString().split('T')[0];
+            }
+
+            const streakInput = document.getElementById('admin-streak-input');
+            const streakStatus = document.getElementById('admin-streak-status');
+            if (adminOverrideStreakVal !== null) {
+                streakInput.value = adminOverrideStreakVal;
+                streakStatus.innerText = "Mode : Surchargé (Bloqué à " + adminOverrideStreakVal + ")";
+                streakStatus.style.color = "var(--orange-day)";
+            } else {
+                streakInput.value = "";
+                streakStatus.innerText = "Mode : Calcul dynamique (Normal)";
+                streakStatus.style.color = "var(--text-dim)";
+            }
+
+            document.getElementById('admin-xp-input').value = totalXP;
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-modal').style.display = 'none';
+        }
+
+        function adminApplyFakeDate() {
+            const newDateStr = document.getElementById('admin-date-input').value;
+            if (newDateStr) {
+                const lastSimulatedDate = getTodayKey();
+                
+                if (lastSimulatedDate !== newDateStr) {
+                    const total = habits.length;
+                    const checked = habits.filter(h => h.done).length;
+                    if (total > 0) {
+                        history[lastSimulatedDate] = { checked: checked, total: total };
+                    }
+                    
+                    // Réinitialisation immédiate et déblocage anti-triche
+                    habits.forEach(h => {
+                        h.done = false;
+                        h.xpBlockedToday = false; 
+                    });
+                }
+
+                adminFakeDateStr = newDateStr;
+                localStorage.setItem('adminFakeDate', newDateStr);
+                localStorage.setItem('lastOpenDate', newDateStr);
+                localStorage.setItem('habits', JSON.stringify(habits));
+                localStorage.setItem('habitHistory', JSON.stringify(history));
+
+                alert("Date système simulée appliquée : " + newDateStr);
+                
+                updateStreakDisplay();
+                renderHabits();
+                renderTodos();
+                
+                if (document.getElementById('calendar-modal').style.display === 'flex') {
+                    buildCalendar();
+                }
+            }
+        }
+
+        function adminApplyOverrideStreak() {
+            const inputVal = document.getElementById('admin-streak-input').value;
+            if (inputVal.trim() === "") {
+                adminOverrideStreakVal = null;
+                localStorage.removeItem('adminOverrideStreak');
+                alert("Streak remise en mode calcul automatique !");
+            } else {
+                const parsed = parseInt(inputVal);
+                adminOverrideStreakVal = parsed;
+                localStorage.setItem('adminOverrideStreak', parsed);
+                alert("Streak forcée manuellement à : " + parsed + " jours");
+            }
+            openAdminPanel();
+            updateStreakDisplay();
+        }
+
+        function adminApplyXP() {
+            const inputVal = document.getElementById('admin-xp-input').value;
+            if (inputVal.trim() !== "" && !isNaN(inputVal)) {
+                totalXP = parseInt(inputVal);
+                localStorage.setItem('totalXP', totalXP);
+                updateXPDisplay();
+                alert(`XP globale modifiée. Nouveau total : ${totalXP} XP.`);
+            }
+        }
+
+        function adminFullReset() {
+            if (confirm("Attention ! Cela va vider complètement l'historique et tes paramètres de test. Continuer ?")) {
+                localStorage.clear();
+                alert("LocalStorage vidé ! Rechargement de l'application.");
+                window.location.reload();
+            }
+        }
+
+        // Initialisation de l'application au chargement
+        checkDayChange();
         renderHabits();
         renderTodos();
         renderNotesList();
+        renderUsernameArea();
+        updateXPDisplay(); 
     </script>
 </body>
 </html>
