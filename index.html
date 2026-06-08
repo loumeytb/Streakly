@@ -860,7 +860,7 @@
             let tempXP = xp;
             
             while (true) {
-                let xpNeededForNext = 1000 + Math.floor(Math.pow(lvl - 1, 1.8) * 100);
+                let xpNeededForNext = 1000 + Math.floor(Math.pow(lvl - 1, 1.8) * 75);
                 if (tempXP >= xpNeededForNext) {
                     tempXP -= xpNeededForNext;
                     lvl++;
