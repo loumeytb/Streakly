@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Streakly</title>
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         :root {
             --bg-color: #121212;
@@ -707,7 +709,7 @@
                     </label>
                 </div>
                 <div class="version-tag-box">
-                    <div class="version-badge">v2.6.3</div>
+                    <div class="version-badge">v2.7.0</div>
                 </div>
             </div>
         </div>
@@ -1063,11 +1065,14 @@
             renderHabits();
         }
 
+        // Ajout de la confirmation avant la suppression d'une Daily
         function deleteDaily(index) {
-            habits.splice(index, 1);
-            localStorage.setItem('habits', JSON.stringify(habits));
-            syncTodayHistory();
-            renderHabits();
+            if(confirm("Voulez-vous vraiment supprimer cet objectif quotidien ?")) {
+                habits.splice(index, 1);
+                localStorage.setItem('habits', JSON.stringify(habits));
+                syncTodayHistory();
+                renderHabits();
+            }
         }
 
         function resetHabitsManual() {
@@ -1131,10 +1136,13 @@
             renderTodos();
         }
 
+        // Ajout de la confirmation avant la suppression d'un To-Do
         function deleteTodo(index) {
-            todos.splice(index, 1);
-            localStorage.setItem('todos', JSON.stringify(todos));
-            renderTodos();
+            if(confirm("Voulez-vous vraiment supprimer cette tâche ?")) {
+                todos.splice(index, 1);
+                localStorage.setItem('todos', JSON.stringify(todos));
+                renderTodos();
+            }
         }
 
         function manualResetTodo() {
